@@ -7,13 +7,11 @@ import datetime
 import pickle
 import altair as alt
 from vega_datasets import data
+import sys, traceback, os
 
 #Header info
 st.title('Crunched Connection')
 st.header('Use this tool several days before your domestic U.S. flight to see if you likely to miss your connection because of severe weather.')
-
-#st.image('2019_Flight_Counts.png',format='PNG')
-
 
 #Read in unique list of airports, unique list of city pairs with distance, and airline carriers
 file = 'Airports.csv'
@@ -29,7 +27,7 @@ latlonFile = 'airport_latlon_subset.csv'
 latlondf = pd.read_csv(latlonFile)
 
 
-#Gather User Inputs though streamlit
+#Gather User Inputs though Streamlit App
 st.sidebar.title('Flight Itinerary Details')
 st.sidebar.markdown("---")
 
@@ -39,35 +37,35 @@ carrier = st.sidebar.selectbox("Carrier", dfCarrier['carrier'])
 st.sidebar.markdown("---")
 
 st.sidebar.header('Select Departing Flight Information')
-depAirport = st.sidebar.selectbox("Departure Airport", df['airport'])
-conAirport = st.sidebar.selectbox("Connecting Airport", df['airport'])
-date = st.sidebar.date_input('Scheduled Departure Date', datetime.date(2020,1,1))
+depAirport = st.sidebar.selectbox("Departure Airport", df['airport'],302)
+conAirport = st.sidebar.selectbox("Connecting Airport", df['airport'],335)
+date = st.sidebar.date_input('Scheduled Departure Date', datetime.date(2019,12,31))
 
 st.sidebar.markdown(' ')
 st.sidebar.header('Scheduled Departure Time')
-depHour = st.sidebar.slider('Hour (Local)', 0, 23, 10)
-depMin = st.sidebar.slider('Minute', 0, 59, 6)
+depHour = st.sidebar.slider('Hour (Local)', 0, 23, 9)
+depMin = st.sidebar.slider('Minute', 0, 59, 30)
 
 st.sidebar.markdown(' ')
 st.sidebar.header('Scheduled Landing Time')
-depLandHour = st.sidebar.slider('Hour (Local)', 0, 23, 12)
-depLandMin = st.sidebar.slider('Minute', 0, 59, 50)
+depLandHour = st.sidebar.slider('Hour (Local)', 0, 23, 13)
+depLandMin = st.sidebar.slider('Minute', 0, 59, 24)
 
 st.sidebar.markdown("---")
 st.sidebar.markdown(' ')
 st.sidebar.header('Select Connecting Flight Information')
-conAirportDummy = st.sidebar.selectbox("Connecting Airport ", df['airport'])
-arrAirport = st.sidebar.selectbox("Final Destination Airport", df['airport'])
+conAirportDummy = st.sidebar.selectbox("Connecting Airport ", df['airport'],335)
+arrAirport = st.sidebar.selectbox("Final Destination Airport", df['airport'],46)
 st.sidebar.header('Scheduled Departure Time')
-conHour = st.sidebar.slider('Hour (Local)', 0, 23, 13)
-conMin = st.sidebar.slider('Minute', 0, 59, 20)
+conHour = st.sidebar.slider('Hour (Local)', 0, 23, 14)
+conMin = st.sidebar.slider('Minute', 0, 59, 13)
 st.sidebar.header('Scheduled Landing Time')
-conLandHour = st.sidebar.slider('Hour (Local)', 0, 23, 21)
-conLandMin = st.sidebar.slider('Minute', 0, 59, 35)
+conLandHour = st.sidebar.slider('Hour (Local)', 0, 23, 22)
+conLandMin = st.sidebar.slider('Minute', 0, 59, 26)
 st.sidebar.markdown("---")
 
 
-#Interactive map Information
+#Interactive map information and code
 depLat = latlondf.loc[latlondf['airport']=='K'+depAirport,'lat'].values[0]
 depLon = latlondf.loc[latlondf['airport']=='K'+depAirport,'lon'].values[0]
 
@@ -76,7 +74,6 @@ conLon = latlondf.loc[latlondf['airport']=='K'+conAirport,'lon'].values[0]
 
 arrLat = latlondf.loc[latlondf['airport']=='K'+arrAirport,'lat'].values[0]
 arrLon = latlondf.loc[latlondf['airport']=='K'+arrAirport,'lon'].values[0]
-
 
 states = alt.topo_feature(data.us_10m.url, feature='states')
 
@@ -106,8 +103,16 @@ line_path = alt.Chart(line_source).mark_line().encode(
 
 st.altair_chart((background + point_path + line_path))
 
+#Find distance and distance group associated with distances between user-provided Airports
+#Throw an error if there is not a known route between 2 cities.
+try:
+    depConDist = dfDist.loc[(dfDist['ORIGIN']==depAirport) & (dfDist['DEST']==conAirport),'DISTANCE'].values[0]
+    depConDistGrp = dfDist.loc[(dfDist['ORIGIN']==depAirport) & (dfDist['DEST']==conAirport),'DISTANCE_GROUP'].values[0]
+except:
+    sys.exit('Tool does not contain information about this flight route. Please choose another route')
 
-#Format user times
+#Format user-input times
+
 #Original departure time
 depTime = str(date)+ ' '+str(depHour).zfill(2)+':'+str(depMin).zfill(2)
 depTime = pd.to_datetime(depTime)
@@ -124,7 +129,7 @@ conTime = pd.to_datetime(conTime)
 conLandTime = str(date)+ ' '+str(conLandHour).zfill(2)+':'+str(conLandMin).zfill(2)
 conLandTime = pd.to_datetime(conLandTime)
 
-#Handle overnight flights
+#Handle overnight flights appropriately
 if (depLandTime - depTime) > pd.Timedelta('6 hours'):
     depLandTime = depLandTime + pd.Timedelta('1 day')
 
@@ -145,20 +150,19 @@ if (ConnectionHoursDelay==0):
 else:
     DelayImpact = str(ConnectionHoursDelay)+' hours and '+str(ConnectionMinutesDelay)+' minutes'
 
-
+#Print information to web app
 st.write(" "); st.write(" ")
 st.header("You have "+str(ConnectionHours)+" hours and "+str(ConnectionMinutes)+" minutes to make your connection in "+conAirport+'.')
 
 st.write(" "); st.write(" ")
 st.header("User input now being ingested into machine learning algorithm... ")
 
-
 # Read met data
 year = str(depTime.year)
-metfile = '../data/processed/met/'+year+'_ProcessedMet.csv'
+metfile = year+'_ProcessedMet.csv'
 dfMet = pd.read_csv(metfile)
 
-#Formatting met data to help with merge
+#Format met data to help with merge
 dfMet['timeLocal'] = pd.to_datetime(dfMet['timeLocal'])
 dfMet['ORIGIN'] = dfMet['airport']
 dfMet['DEST'] = dfMet['airport']
@@ -172,10 +176,6 @@ conAirportK = 'K' + conAirport
 #Find airport ID associated with user-provided airports
 depAirportCode = df.loc[df['airport']==depAirport,'airport_ID'].values[0]
 conAirportCode = df.loc[df['airport']==conAirport,'airport_ID'].values[0]
-
-#Find distance and distance group associated with distances between user-provided Airports
-depConDist = dfDist.loc[(dfDist['ORIGIN']==depAirport) & (dfDist['DEST']==conAirport),'DISTANCE'].values[0]
-depConDistGrp = dfDist.loc[(dfDist['ORIGIN']==depAirport) & (dfDist['DEST']==conAirport),'DISTANCE_GROUP'].values[0]
 
 #Get airline carrier code
 carrierCode = dfCarrier.loc[dfCarrier['carrier']==carrier,'carrier_number'].values[0]
@@ -226,8 +226,7 @@ dfUserML.rename(columns={'ORIGIN_x':'ORIGIN','tmpF':'tmpF_A','dptF':'dptF_A','CC
             '6hrSvrTsPrb_25mi':'6hrSvrTsPrb_25mi_A'},inplace=True)
 
 
-# Ingest data into trained ML model!
-# Only include columns actually used in ML model
+# Ingest data into trained ML model! Only include columns actually used in ML model
 
 dfUserMLsub = dfUserML[['spd_D', 'fzRnPrb_D', 'snowPrb_D', '6hrTsPrb_15mi_D',
        '6hrSvrTsPrb_25mi_D', 'fzRnPrb_A', 'snowPrb_A', '6hrTsPrb_15mi_A',
@@ -248,9 +247,10 @@ forest_predicted = MLmodel.predict(dfUserMLsub)
 #Calculate probability of being on-time and late
 predictProba = MLmodel.predict_proba(dfUserMLsub)
 dfProba = pd.DataFrame(predictProba,columns=['on-time','late'])
-dfProbaOnTime = (1 - dfProba['on-time'].values[0].astype(int)) * 100
-dfProbaLate = (dfProba['late'].values[0].astype(int)) * 100
+dfProbaOnTime = int ( (1 - dfProba['on-time'].values[0]) * 100 )
+dfProbaLate = int( (dfProba['late'].values[0]) * 100 )
 
+#Write ML results to web app
 st.write(" "); st.write(" ")
 if (forest_predicted==0):
      st.header ('Your departure flight is unlikely to be impacted by severe weather. There is a '+str(dfProbaOnTime)+'% chance that severe weather will impact your flight connection.')

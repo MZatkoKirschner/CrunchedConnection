@@ -1,10 +1,14 @@
 import numpy as np
 import pandas as pd
 
+#This script creates files that contain all unique airport pairs and the
+# distance between the pairs. These are used in the streamlit web app.
+
 #Read airport data for 1 year
 flightfile = '../../data/raw/flights/2019_allFlightData.csv'
 flight = pd.read_csv(flightfile)
 
+#Keep only relevant columns
 flightSub = flight[['ORIGIN_AIRPORT_ID','ORIGIN','DEST_AIRPORT_ID','DEST','DISTANCE',
     'DISTANCE_GROUP','OP_UNIQUE_CARRIER']]
 

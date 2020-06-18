@@ -1,21 +1,28 @@
 import pandas as pd
 import glob
 
+#This script subsets annual flight data and generates output for merging with met data
+
+#Define input directory
 rawDataDir = '../../data/raw/flights/'
 
-#years = [2015,2016,2017,2018,2019]
-years = [2019]
+years = [2015,2016,2017,2018,2019]
 
 for year in years:
 
+    #Read annual flight data
     df = pd.read_csv(rawDataDir+str(year)+'_allFlightData.csv')
 
-    #Drop features not needed for ML
-    df.drop(['TAIL_NUM','OP_CARRIER_FL_NUM','ORIGIN_CITY_NAME','DEST_CITY_NAME',
-        'DEP_TIME','DEP_DELAY','DEP_DELAY_GROUP','TAXI_OUT','WHEELS_OFF','WHEELS_ON',
-        'TAXI_IN','ARR_TIME','ARR_DELAY','CANCELLED','DIVERTED','CRS_ELAPSED_TIME',
-        'ACTUAL_ELAPSED_TIME','AIR_TIME','FLIGHTS','DISTANCE','CARRIER_DELAY',
-        'WEATHER_DELAY','NAS_DELAY','SECURITY_DELAY','LATE_AIRCRAFT_DELAY'],inplace=True,axis=1)
+    #Remove rows that have carrier, NAS, security, late aircraft delays
+    #This ensures that dataset contains 1) flights delayed by weather and 2) on-time flights
+    df = df[~(df['CARRIER_DELAY']>0)]
+    df = df[~(df['SECURITY_DELAY']>0)]
 
+    #Drop features not needed for ML
+    df.drop(['OP_CARRIER_FL_NUM','ORIGIN_CITY_NAME','DEST_CITY_NAME',
+            'ARR_TIME','ARR_DELAY','AIR_TIME','FLIGHTS','CARRIER_DELAY',
+            'SECURITY_DELAY'],inplace=True,axis=1)
+
+    #Save subset of flight data to csv for merging with met data
     outpath = '../../data/processed/flights/'
-    df.to_csv(outpath+str(year)+'_ProcessedFlightData.csv',index=False)
+    df.to_csv(outpath+str(year)+'_ProcessedFlightData_withNAS_lateAircraft_cancellations.csv',index=False)

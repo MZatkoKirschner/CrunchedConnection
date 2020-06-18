@@ -3,23 +3,22 @@
 import pandas as pd
 import glob
 
-#Create annual files and export raw files for EDA. Subset these files for ML in 03 script
+#Concatenate monthly files into annual files and export raw files for EDA.
+#Subset these files for ML in following script
 
 rawDataDir = '../../data/raw/flights/'
 
-#years = ['2015','2016','2017','2018','2019']
-years = ['2019']
+years = ['2015','2016','2017','2018','2019']
 
 dfAnn = []
 
 for year in years:
-    obsdirs = glob.glob(rawDataDir+'rawMonthlyData/'+str(year)+'-*.csv')
+    obsdirs = glob.glob(rawDataDir+'rawMonthlyData/'+str(year)+'*.csv')
 
     dfAnnTmp = []
 
     for obsdir in obsdirs:
         filename = obsdir.split("/")[6]
-        year = filename.split("-")[0]
 
         #Read monthly data
         df = pd.read_csv(obsdir)

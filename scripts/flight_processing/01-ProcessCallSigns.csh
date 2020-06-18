@@ -1,7 +1,7 @@
 #!/bin/csh
 
 #This script generates a list of unique callsigns in the flight dataset
-#Unique list used to extract meteorology at each airport
+#The unique list used to extract meteorology at each airport
 
 #Get all the unique 3-letter callsigns for the flight dataset from each csv file
 #Origin and destination callsigns both pulled

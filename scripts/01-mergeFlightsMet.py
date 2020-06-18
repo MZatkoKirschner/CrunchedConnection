@@ -2,6 +2,7 @@
 
 import pandas as pd
 import numpy as np
+from datetime import timedelta
 
 filepath = '../data/processed/'
 filepathFlight = '../data/processed/flights/'
@@ -9,7 +10,7 @@ filepathMet = '../data/processed/met/'
 outdir = '../data/processed/merged/'
 
 #years = [2015, 2016, 2017, 2018, 2019]
-years = [2019]
+years = [2017]
 
 for year in years:
 
@@ -23,19 +24,17 @@ for year in years:
     dfMet['tmpF'].loc[dfMet['tmpF']==999.0] = np.NaN
     dfMet['dptF'].loc[dfMet['dptF']==999.0] = np.NaN
 
-    #These columns appear to always be missing
-    dfMet.drop(['prbRain','prbSnow','prbFzRn','gust'],inplace=True,axis=1)
-
     #Updates to make merging more smooth
     dfMet['timeLocal'] = pd.to_datetime(dfMet['timeLocal'])
     dfMet['ORIGIN'] = dfMet['airport']
     dfMet['DEST'] = dfMet['airport']
 
-    #Read in flight data
-    fileFlight= filepathFlight+str(year)+'_ProcessedFlightData.csv'
+    # #Read in flight data
+    #fileFlight= filepathFlight+str(year)+'_ProcessedFlightData.csv'
+    fileFlight= filepathFlight+str(year)+'_ProcessedFlightData_withNAS_lateAircraft_cancellations.csv'
     dfFlight = pd.read_csv(fileFlight)
 
-    #Update origin and deparature names for easier merging
+    # #Update origin and deparature names for easier merging
     dfFlight['ORIGIN'] = 'K' + dfFlight['ORIGIN']
     dfFlight['ORIGIN'].loc[dfFlight['ORIGIN']=='KANC'] = 'PANC' #Anchorage
     dfFlight['ORIGIN'].loc[dfFlight['ORIGIN']=='KHNL'] = 'PHLN' #Honolulu
@@ -64,10 +63,13 @@ for year in years:
         'month':dfFlight['FL_DATE'].dt.month,'day':dfFlight['FL_DATE'].dt.day,
         'hour':dfFlight['ARR_HR'],'minute':dfFlight['ARR_MIN']})
 
-    dfFlight.drop(['CRS_DEP_TIME','CRS_ARR_TIME','Unnamed: 35','DEP_HR','DEP_MIN',
+    dfFlight.drop(['CRS_DEP_TIME','CRS_ARR_TIME','Unnamed: 38','DEP_HR','DEP_MIN',
         'ARR_HR','ARR_MIN','FL_DATE'],inplace=True,axis=1)
 
-    #Start the merging process
+    #Deal with overnight flights
+    dfFlight.loc[(dfFlight['DEP_TIME'] - dfFlight['ARR_TIME']) > pd.Timedelta('6 hours'),'ARR_TIME'] = dfFlight['ARR_TIME'] + pd.Timedelta('1 day')
+
+    # #Start the merging process
 
     #First, merge met and flights based on ORIGIN city and departure time
     dfMet.sort_values(by=['timeLocal'],inplace=True)
@@ -81,7 +83,7 @@ for year in years:
         'spd':'spd_D','6hPrecPrb':'6hPrecPrb_D','12hPrecPrb':'12hPrecPrb_D',
         '6hQntPrec':'6hQntPrec_D','12hQntPrec':'12hQntPrec_D','snow':'snow_D',
         'ceil':'ceil_D','visib':'visib_D','obstruc':'obstruc_D','fzRnPrb':'fzRnPrb_D',
-        'snowPrb':'snowPrb_D','precTyp':'precTyp_D','6hrTsPrb_15mi':'6hrTsPrb_15mi_D',
+        'snowPrb':'snowPrb_D','6hrTsPrb_15mi':'6hrTsPrb_15mi_D',
         '6hrSvrTsPrb_25mi':'6hrSvrTsPrb_25mi_D'},inplace=True)
 
     #Next merge met and flights based on destination city and arrival time
@@ -94,9 +96,11 @@ for year in years:
             'spd':'spd_A','6hPrecPrb':'6hPrecPrb_A','12hPrecPrb':'12hPrecPrb_A',
             '6hQntPrec':'6hQntPrec_A','12hQntPrec':'12hQntPrec_A','snow':'snow_A',
             'ceil':'ceil_A','visib':'visib_A','obstruc':'obstruc_A','fzRnPrb':'fzRnPrb_A',
-            'snowPrb':'snowPrb_A','precTyp':'precTyp_A','6hrTsPrb_15mi':'6hrTsPrb_15mi_A',
+            'snowPrb':'snowPrb_A','6hrTsPrb_15mi':'6hrTsPrb_15mi_A',
             '6hrSvrTsPrb_25mi':'6hrSvrTsPrb_25mi_A'},inplace=True)
 
     dfMergeDA.sort_values(by='DEP_TIME')
+
+    dfMergeDA.drop_duplicates(inplace=True)
 
     dfMergeDA.to_csv(outdir+str(year)+'_FlightMetMerged.csv',index=False)

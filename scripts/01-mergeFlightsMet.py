@@ -4,17 +4,17 @@ import pandas as pd
 import numpy as np
 from datetime import timedelta
 
+#Read in processed flight and met data, define output directory
 filepath = '../data/processed/'
 filepathFlight = '../data/processed/flights/'
 filepathMet = '../data/processed/met/'
 outdir = '../data/processed/merged/'
 
-#years = [2015, 2016, 2017, 2018, 2019]
-years = [2017]
+years = [2015, 2016, 2017, 2018, 2019]
 
 for year in years:
 
-    #Read in met data
+    #Read in annual met data
     fileMet = filepathMet+str(year)+'_ProcessedMet.csv'
     dfMet = pd.read_csv(fileMet)
 
@@ -29,12 +29,12 @@ for year in years:
     dfMet['ORIGIN'] = dfMet['airport']
     dfMet['DEST'] = dfMet['airport']
 
-    # #Read in flight data
+    #Read in annual flight data
     #fileFlight= filepathFlight+str(year)+'_ProcessedFlightData.csv'
     fileFlight= filepathFlight+str(year)+'_ProcessedFlightData_withNAS_lateAircraft_cancellations.csv'
     dfFlight = pd.read_csv(fileFlight)
 
-    # #Update origin and deparature names for easier merging
+    #Update origin and deparature names for easier merging
     dfFlight['ORIGIN'] = 'K' + dfFlight['ORIGIN']
     dfFlight['ORIGIN'].loc[dfFlight['ORIGIN']=='KANC'] = 'PANC' #Anchorage
     dfFlight['ORIGIN'].loc[dfFlight['ORIGIN']=='KHNL'] = 'PHLN' #Honolulu
@@ -69,15 +69,15 @@ for year in years:
     #Deal with overnight flights
     dfFlight.loc[(dfFlight['DEP_TIME'] - dfFlight['ARR_TIME']) > pd.Timedelta('6 hours'),'ARR_TIME'] = dfFlight['ARR_TIME'] + pd.Timedelta('1 day')
 
-    # #Start the merging process
+    #Start the flight+met merging process
 
-    #First, merge met and flights based on ORIGIN city and departure time
+    #First, merge met and flights based on origin city and departure time
     dfMet.sort_values(by=['timeLocal'],inplace=True)
     dfFlight.sort_values(by=['DEP_TIME'],inplace=True)
     dfMergeD = pd.merge_asof(left=dfFlight,right=dfMet,left_on=['DEP_TIME'],right_on=['timeLocal'],
         by=['ORIGIN'])
 
-    #Drop columns no longer needed and rename met columns so we know those are tied to departure
+    #Drop columns no longer needed and rename met columns so we know those are tied to departure airport
     dfMergeD.drop(['timeLocal','airport','DEST_y'],axis=1,inplace=True)
     dfMergeD.rename(columns={'DEST_x':'DEST','tmpF':'tmpF_D','dptF':'dptF_D','CC':'CC_D','dir':'dir_D',
         'spd':'spd_D','6hPrecPrb':'6hPrecPrb_D','12hPrecPrb':'12hPrecPrb_D',
@@ -86,7 +86,7 @@ for year in years:
         'snowPrb':'snowPrb_D','6hrTsPrb_15mi':'6hrTsPrb_15mi_D',
         '6hrSvrTsPrb_25mi':'6hrSvrTsPrb_25mi_D'},inplace=True)
 
-    #Next merge met and flights based on destination city and arrival time
+    #Next merge met and flights based on arrival airport and time
     dfMergeD.sort_values(by=['ARR_TIME'],inplace=True)
     dfMergeDA = pd.merge_asof(left=dfMergeD,right=dfMet,left_on=['ARR_TIME'],right_on=['timeLocal'],
             by=['DEST'])

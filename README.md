@@ -14,9 +14,9 @@ Domestic U.S. flight records from 2017 through 2019 are paired with archived wea
 
 Datasets:
 
-Department of Transportation Statistics, Report Carrier On-Time Performance (https://www.transtats.bts.gov/Fields.asp). Dataset contains detailed data for U.S. flights from 1987 to present. Data contains information such as departure and arrival city and delay information. Years 2017, 2018, and 2019 were used for this project.
+Department of Transportation Statistics, Report Carrier On-Time Performance (https://www.transtats.bts.gov/Fields.asp).
 
-National Weather Service achived forecast data (Model Output Statistics (https://mesonet.agron.iastate.edu/mos/). Dataset contains archived forecast data for individual airports from 2000 to present. Python script used to download
+National Weather Service Achived Model Output Statistics (https://mesonet.agron.iastate.edu/mos/). 
 
 
 Project Directory Structure:

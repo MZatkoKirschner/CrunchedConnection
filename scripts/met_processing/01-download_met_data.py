@@ -5,13 +5,18 @@ import csv
 import urllib
 from datetime import timedelta
 
-#Notes about forecast weather data:
-# 1. For now, only use forecasts from NAM because it has higher resolution than GFS
-# 2. For now, download different forecast periods but only use 24-30 hour forecast in ML model
+#This script downloads and processes archived weather forecast data. Data
+# downloaded in 10 day batches and concatenated into annual files
 
+#Notes about forecast weather data:
+# 1. Only use forecasts from NAM because it has higher resolution than GFS
+# 2. For v1 of tool, save the 24-30 hour forecasts for ML model.
+#    Longer forecasts will be incorporated in the future.
+
+#Define output directory
 outdir = '../../data/raw/met/'
 
-#Functions
+#Function to download met data files
 def downloadMet(call,time):
     """Downloads forecast met data"""
 
@@ -42,26 +47,26 @@ callsigns.loc[callsigns['callsign']=='KHLN'] = 'PHLN' #Honolulu
 
 #Loop over callsign and date to download met for each airport
 
-#Reprocessed plane data, realized 18 sites were missing. Re-run scripts with these missing sites
-#callsignsMore = ['KACK','KAKN','KATY','KBFM','KBKG','KDLG','KEFD','KENV','KFLO',
-
-#years = [2019,2018,2017,2016,2015]
-years = [2019]
+years = [2020,2019,2018,2017,2016,2015]
 
 for year in years:
     rawMet = []
+
+    #Define start and end period
     endyear = year+1
     date = pd.to_datetime(str(year)+'-01-01')
     enddate = pd.to_datetime(str(endyear)+'-01-15')
+    #enddate = pd.to_datetime('2020-06-11')
 
+    #Download loops over time
     while date <= enddate:
 
+        #Format date
         dateFormat = str(date.year)+'-'+str(date.month).zfill(2)+'-'+str(date.day).zfill(2)
 
-        #for i in range(0,len(callsignsMore)):
+        #Download loops over site
         for i in range(0,len(callsigns)):
             station = callsigns.iloc[i].values[0]
-            #station = callsignsMore[i]
 
             rawMettmp = downloadMet(station,dateFormat)
 
@@ -74,6 +79,8 @@ for year in years:
         date += timedelta(9)
         print ('date =' + str(date))
 
+    #Concatenate 10 day download chunks together
     met = pd.concat(rawMet)
+
+    #Save output to hdf5 file for each year
     met.to_hdf(outdir+str(year)+'_met.h5', key='met', mode='w')
-    #met.to_hdf(str(year)+'_met_moreSites.h5', key='met', mode='w')

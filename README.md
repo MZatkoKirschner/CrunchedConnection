@@ -17,7 +17,7 @@ Datasets:
 
 Department of Transportation Statistics, Report Carrier On-Time Performance (https://www.transtats.bts.gov/Fields.asp).
 
-National Weather Service Achived Model Output Statistics (https://mesonet.agron.iastate.edu/mos/).
+National Weather Service Archived Model Output Statistics (https://mesonet.agron.iastate.edu/mos/).
 
 <br />
 <br />

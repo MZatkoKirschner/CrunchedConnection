@@ -1,4 +1,4 @@
-Crunched Connection Web App (https://bit.ly/crunchedconnectionapp)
+Crunched Connection Web App (https://bit.ly/CrunchedConnectionSite)
 
 Maria Zatko, Insight Data Science Fellow in Seattle
 

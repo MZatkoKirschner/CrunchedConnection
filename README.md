@@ -5,7 +5,7 @@ Maria Zatko, Insight Data Science Fellow in Seattle
 <br />
 Motivation and Background:
 
-Each year there are over 800 million airline passengers, and at least 20% of flights are delayed or cancelled. Missed flight connections are a huge hassle for both travelers and airlines. Some delays and cancellations are impossible to predict, such as mechanical plane issues. However, weather accounts for a signifcant portion (~30-50%) of total delay minutes each year and is something we can predict.  
+Each year there are over 800 million airline passengers, and at least 20% of flights are delayed or cancelled. Missed flight connections are a huge hassle for both travelers and airlines. Some delays and cancellations are impossible to predict, such as mechanical plane issues. However, weather accounts for a significant portion (~30-50%) of total delay minutes each year and is something we can predict.  
 
 Travelers can use the Crunched Connection web app several days before their flight to determine how likely they are to miss their flight connection because of several weather. The Crunched Connection tool is hosted on AWS and relies on flight itineraries, weather forecasts, and supervised machine learning to estimate the probability of a missed connection.
 

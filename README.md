@@ -1,4 +1,7 @@
-Crunched Connection Web App (http://bit.ly/crunchedconnectionwebsite)
+Crunched Connection Web App
+App: http://bit.ly/crunchedconnectionwebsite
+Demo Video: https://youtu.be/c5bp8Odh8qQ
+<br />
 
 Maria Zatko, Insight Data Science Fellow in Seattle
 

@@ -5,7 +5,7 @@ App: http://bit.ly/crunchedconnectionwebsite
 Demo Video: https://youtu.be/c5bp8Odh8qQ
 <br />
 
-Maria Zatko, Insight Data Science Fellow in Seattle
+Maria Zatko, Insight Data Science Fellow
 
 <br />
 Motivation and Background:
